@@ -10,7 +10,7 @@ class MicrophoneListener:
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
         self.paudio = pyaudio.PyAudio()
-        with open('/home/ubuntu/catkin_ws/src/speech_to_text/src/dialogue_package/local/my-speech-service-343100-9df89039471a.json', 'r') as f:
+        with open('/home/ubuntu/catkin_ws/src/speech_to_text/src/dialogue_package/local/my-speech-service-343100-162a57910e55.json', 'r') as f:
             self.google_credentials = json.load(f)
 
         

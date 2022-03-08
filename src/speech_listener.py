@@ -7,6 +7,8 @@ from std_msgs.msg import String
 
 voice = rv.RobotVoice()
 
+speech_filler = "ok yes ok "
+
 def speech_text_broadcaster():
 
     mic_listener = ml.MicrophoneListener()
@@ -26,7 +28,7 @@ def speech_text_broadcaster():
 
 
 def talk_function(data):
-    voice.say_something(data.data)
+    voice.say_something(speech_filler + data.data)
 
 
 
