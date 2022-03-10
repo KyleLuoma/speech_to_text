@@ -12,6 +12,13 @@ class MicrophoneListener:
         self.paudio = pyaudio.PyAudio()
         with open('/home/ubuntu/catkin_ws/src/speech_to_text/src/dialogue_package/local/my-speech-service-343100-162a57910e55.json', 'r') as f:
             self.google_credentials = json.load(f)
+        self.preferred_phrases = [
+            'send a message', 'host', 'social bot', 'click a picture', 'click picture',
+                'take a picture', 'take picture', 'take a pic', 'take a pick',
+                'take pic', 'take pick', 'click a photograph', 'click photograph',
+                'take a photograph', 'take photograph', 'click a photo',
+                'click photo', 'take a photo', 'take photo'
+        ]
 
         
     
@@ -24,18 +31,20 @@ class MicrophoneListener:
 
     def listen(self):
         stop_listening = False
-        self.recognizer.pause_threshold = 1.25
-        self.recognizer.energy_threshold = 4000
+        self.recognizer.pause_threshold = 0.75
+        self.recognizer.energy_threshold = 2000
+        self.recognizer.dynamic_energy_threshold = False
         with self.microphone as source:
             print("Listening...")
-            speech = self.recognizer.listen(source)
+            speech = self.recognizer.listen(
+                source,
+                phrase_time_limit = 59
+                )
             print("Ok, I heard you. Sending sound file to Google Cloud for transcription.")
         try:
             transcript = self.recognizer.recognize_google_cloud(
                     audio_data=speech,
-                    preferred_phrases=[
-                        'party bot', 'send a message', 'host', 'stop program', "social bot"
-                        ], #NOTE: Error in speech_recognition library __init__.py must change ["speechContext"] to ["speechContexts"] on line 924
+                    preferred_phrases = self.preferred_phrases, #NOTE: Error in speech_recognition library __init__.py must change ["speechContext"] to ["speechContexts"] on line 924
                     credentials_json = JSONEncoder().encode(self.google_credentials)
                 )
             print("Here's what I think you said:", transcript)

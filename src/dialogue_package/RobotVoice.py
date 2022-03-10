@@ -6,7 +6,7 @@ class RobotVoice:
         self.engine = pyttsx3.init(driverName="espeak")
         voices = self.engine.getProperty('voices') 
         self.engine.setProperty('voice', 'english_rp+f3')
-        self.engine.setProperty('rate', 110)
+        self.engine.setProperty('rate', 130)
 
 
 
