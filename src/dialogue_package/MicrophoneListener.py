@@ -19,6 +19,10 @@ class MicrophoneListener:
                 'take a photograph', 'take photograph', 'click a photo',
                 'click photo', 'take a photo', 'take photo'
         ]
+        self.default_energy_threshold = 4000
+        self.energy_threshold = self.default_energy_threshold
+        self.use_dymanmic_energy_threshold = False
+        self.recognizer.dynamic_energy_threshold = self.use_dymanmic_energy_threshold
 
         
     
@@ -29,11 +33,22 @@ class MicrophoneListener:
 
 
 
+    def mute_microphone(self):
+        print("Muting microphone")
+        self.recognizer.dynamic_energy_threshold = False
+        self.recognizer.energy_threshold = 100000
+        
+        
+        
+    def unmute_microphone(self):
+        print("Unmuting microphone")
+        self.recognizer.energy_threshold = self.default_energy_threshold
+
+
+
     def listen(self):
         stop_listening = False
         self.recognizer.pause_threshold = 0.75
-        self.recognizer.energy_threshold = 2000
-        self.recognizer.dynamic_energy_threshold = False
         with self.microphone as source:
             print("Listening...")
             speech = self.recognizer.listen(

@@ -48,7 +48,7 @@ class TextMessageSender:
                 rospy.loginfo("THIS IS WHERE WE SUBMIT THE MESSAGE TO THE API: " + self.text_message_content)
                 self.text_message_content = ""
                 self.confirmation_phrase = ""
-                self.do_text_message_function = False
+                self.waiting_for_text_command = True
 
 
     def speech_command_handler(self, data):

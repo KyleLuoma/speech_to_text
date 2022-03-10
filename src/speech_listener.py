@@ -19,15 +19,16 @@ class DialogueController:
         self.talker_sub = rospy.Subscriber('robot_talk', String, self.talk_function)
         rospy.init_node('speech_text_broadcaster', anonymous=True)
         self.rate = rospy.Rate(10)
+        self.mic_listener = ml.MicrophoneListener()
 
     def speech_text_broadcaster(self):
 
-        mic_listener = ml.MicrophoneListener()
+        mic_listener = self.mic_listener
 
         while not rospy.is_shutdown():
-            rospy.loginfo("Inside while loop, robot is talking is " + str(self.robot_is_talking))
+            #rospy.loginfo("Inside while loop, robot is talking is " + str(self.robot_is_talking))
             if not self.robot_is_talking:
-                self.robot_say_phrase("Social bot is listening.", self.talker_pub)
+                self.robot_say_phrase("I'm listening.", self.talker_pub)
                 speech_command = mic_listener.listen().strip()
                 rospy.loginfo(speech_command)
 
@@ -48,7 +49,7 @@ class DialogueController:
                     confirmed = False
                     for word in ["yes", "yeah", "correct", "affirmative", "roger", "yup", "true"]:
                         if word in confirmation:
-                            self.robot_say_phrase("Great, I will see what I can do for you.", self.talker_pub)
+                            self.robot_say_phrase("Ok.", self.talker_pub)
 
                             self.pub.publish(speech_command)
                             confirmed = True
@@ -64,7 +65,7 @@ class DialogueController:
             voice.say_something(self.speech_filler + phrase)
         else:
             talker_publisher.publish(phrase)
-            time.sleep(seconds_to_wait)
+            #time.sleep(seconds_to_wait)
 
 
     def talk_function(self, data):
@@ -72,9 +73,13 @@ class DialogueController:
             seconds_to_wait = len(data.data.split(" ")) * .3
             self.robot_is_talking = True
             rospy.loginfo("Robot is talking, so we shouldn't be listening.")
+            self.mic_listener.mute_microphone()
             self.voice.say_something(self.speech_filler + data.data)
-            time.sleep(seconds_to_wait)
+            #rospy.loginfo("Listener is sleeping for " + str(seconds_to_wait) + " seconds.")
+            #rospy.sleep(seconds_to_wait)
+            #rospy.loginfo("Listener is done sleeping.")
             self.robot_is_talking = False
+            self.mic_listener.unmute_microphone()
             rospy.loginfo("Robot should be done talking, so we should listen again.")
         else:
             rospy.loginfo("Waiting for the robot to stop talking before we say " + data.data)
@@ -84,7 +89,7 @@ class DialogueController:
             self.robot_is_talking = True
             rospy.loginfo("Robot is talking, so we shouldn't be listening.")
             self.voice.say_something(self.speech_filler + data.data)
-            time.sleep(seconds_to_wait)
+            #rospy.sleep(seconds_to_wait)
             self.robot_is_talking = False
             rospy.loginfo("Robot should be done talking, so we should listen again.")
 

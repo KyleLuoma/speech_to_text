@@ -11,7 +11,9 @@ class RobotVoice:
 
 
     def say_something(self, message):
+        print("RobotVoice is Saying: ", message)
         self.engine.say(message)
         self.engine.runAndWait()
+        print("RobotVoice is done talking")
 
 
