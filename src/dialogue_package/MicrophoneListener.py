@@ -19,7 +19,7 @@ class MicrophoneListener:
                 'take a photograph', 'take photograph', 'click a photo',
                 'click photo', 'take a photo', 'take photo'
         ]
-        self.default_energy_threshold = 4000
+        self.default_energy_threshold = 1000
         self.energy_threshold = self.default_energy_threshold
         self.use_dymanmic_energy_threshold = False
         self.recognizer.dynamic_energy_threshold = self.use_dymanmic_energy_threshold

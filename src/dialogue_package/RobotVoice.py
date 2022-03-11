@@ -7,13 +7,21 @@ class RobotVoice:
         voices = self.engine.getProperty('voices') 
         self.engine.setProperty('voice', 'english_rp+f3')
         self.engine.setProperty('rate', 130)
+        self.talking = False
 
 
 
     def say_something(self, message):
         print("RobotVoice is Saying: ", message)
+        self.talking = True
         self.engine.say(message)
         self.engine.runAndWait()
         print("RobotVoice is done talking")
+        self.talking = False
+
+
+    
+    def is_talking(self):
+        return self.talking
 
 

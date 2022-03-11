@@ -44,7 +44,7 @@ class TextMessageSender:
                 
             elif len(self.confirmation_phrase) > 0:
                 rospy.loginfo("The confirmation phrase we got from the topic is: " + self.confirmation_phrase)
-                self.robot_talk_publisher.publish("Ok, thanks for confirming. I'm sending the message now.")
+                self.robot_talk_publisher.publish("Thanks for confirming. I'm sending the message now.")
                 rospy.loginfo("THIS IS WHERE WE SUBMIT THE MESSAGE TO THE API: " + self.text_message_content)
                 self.text_message_content = ""
                 self.confirmation_phrase = ""
