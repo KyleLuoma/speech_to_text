@@ -48,25 +48,35 @@ class MicrophoneListener:
 
     def listen(self):
         stop_listening = False
-        self.recognizer.pause_threshold = 0.75
+        self.recognizer.pause_threshold = 2
         with self.microphone as source:
             print("Listening...")
-            speech = self.recognizer.listen(
-                source,
-                phrase_time_limit = 59
-                )
-            print("Ok, I heard you. Sending sound file to Google Cloud for transcription.")
-        try:
-            transcript = self.recognizer.recognize_google_cloud(
+            try:
+                speech = self.recognizer.listen(
+                    source,
+                    timeout = 45,
+                    phrase_time_limit = 59
+                    )
+                print("Ok, I heard you. Sending sound file to Google Cloud for transcription.")
+
+                transcript = self.recognizer.recognize_google_cloud(
                     audio_data=speech,
                     preferred_phrases = self.preferred_phrases, #NOTE: Error in speech_recognition library __init__.py must change ["speechContext"] to ["speechContexts"] on line 924
                     credentials_json = JSONEncoder().encode(self.google_credentials)
                 )
-            print("Here's what I think you said:", transcript)
-            return transcript
-        except sr.UnknownValueError:
-            print("Didn't understand what you said.")
-            return "unrecognized input"
+                print("Here's what I think you said:", transcript)
+                return transcript
+
+            except sr.WaitTimeoutError:
+                print("MicrophoneListener.listen timed out.")
+                return ""
+
+            except sr.UnknownValueError:
+                print("Didn't understand what you said.")
+                return "unrecognized input"
+
+            
+        
         
 
 

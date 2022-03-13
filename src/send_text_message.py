@@ -1,4 +1,5 @@
 import rospy
+import requests
 from std_msgs.msg import String
 
 class TextMessageSender:
@@ -27,6 +28,10 @@ class TextMessageSender:
 
         self.rate = rospy.Rate(10)
 
+        # Timeout threshold indicates how long we should wait before abandoning a text message request 
+        self.last_activity_time = rospy.get_time()
+        self.timeout_threshold = 45
+
     def wait_for_text_command(self):
         while not rospy.is_shutdown():
 
@@ -44,11 +49,22 @@ class TextMessageSender:
                 
             elif len(self.confirmation_phrase) > 0:
                 rospy.loginfo("The confirmation phrase we got from the topic is: " + self.confirmation_phrase)
-                self.robot_talk_publisher.publish("Thanks for confirming. I'm sending the message now.")
-                rospy.loginfo("THIS IS WHERE WE SUBMIT THE MESSAGE TO THE API: " + self.text_message_content)
+                confirmed = False
+                for word in ["yes", "yeah", "correct", "affirmative", "roger", "yup", "true", "send", "good"]:
+                    if word in self.confirmation_phrase:
+                        self.robot_talk_publisher.publish("Thanks for confirming. I'm sending the message now.")
+                        rospy.loginfo("THIS IS WHERE WE SUBMIT THE MESSAGE TO THE API: " + self.text_message_content)
+                        confirmed = True
+                        self.send_text_message_to_server(self.text_message_content)
+                        break
+                if not confirmed:
+                    self.robot_talk_publisher.publish(
+                        "That's ok, we won't send the message. If you want to try again, just say send a text message."
+                        )
                 self.text_message_content = ""
                 self.confirmation_phrase = ""
                 self.waiting_for_text_command = True
+
 
 
     def speech_command_handler(self, data):
@@ -68,6 +84,20 @@ class TextMessageSender:
             rospy.loginfo("Confirmation phrase pulled from topic: " + data.data)
             self.confirmation_phrase = data.data
             self.waiting_for_confirmation = False
+
+
+
+    def send_text_message_to_server(self, message):
+        url = "https://adde8da4-f95d-4684-ba25-287f6c3f1c4e.mock.pstmn.io"
+        request_obj = {'text_message' : message}
+        response = requests.post(url, data = request_obj)
+        return response        
+
+
+
+    # Simple function that resets last activity time. Used to manage the timeout feature.
+    def reset_last_activity_time(self):
+        self.last_activity_time = rospy.get_time()
 
 
 
