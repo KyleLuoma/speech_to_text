@@ -48,7 +48,7 @@ class MicrophoneListener:
 
     def listen(self):
         stop_listening = False
-        self.recognizer.pause_threshold = 2
+        self.recognizer.pause_threshold = 1
         with self.microphone as source:
             print("Listening...")
             try:

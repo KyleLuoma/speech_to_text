@@ -60,8 +60,8 @@ class DialogueController:
             "What do you call a robot who likes to row? A row-bot!",
             "How do robots pay for things? With cache, of course!",
             "How do nano-robots travel? On the nano-tube!",
-            "What do you get when you cross a cat with a robot? A meow-bot!",
-            "What's the difference between a robot and a human? Humans have a sense of humor"
+            "What's the difference between a robot and a human? Humans have a sense of humor",
+            "What do you get when you cross a cat with a robot? A meow-bot!"
         ]
 
 
@@ -74,6 +74,7 @@ class DialogueController:
 
         mic_listener = self.mic_listener
         self.robot_say_phrase("Dialogue Controller has started. Social Bot is now listening.", self.talker_pub)
+        do_woke_up_command = False
 
         while not rospy.is_shutdown():
 
@@ -84,9 +85,11 @@ class DialogueController:
                 if self.dialogue_mode:
                     self.robot_say_phrase("I'm not listening anymore, say social bot to get my attention.", self.talker_pub)
                 self.dialogue_mode = False
+            else:
+                self.dialogue_mode = True
                 
 
-            if not self.voice.is_talking():
+            if not self.voice.is_talking() and not do_woke_up_command:
                 speech_command = mic_listener.listen().strip()
                 speech_command = speech_command.replace(" one ", " 1 ").replace(" two ", " 2 ").replace(" three ", " 3 ").replace(" four ", " 4 ")
                 speech_command = speech_command.replace(" five ", " 5 ").replace(" six ", " 6 ").replace(" seven ", " 7 ")
@@ -118,6 +121,7 @@ class DialogueController:
                         "Ok, just say social bot to get my attention", self.talker_pub
                     )
                     self.dialogue_mode = False
+                    self.last_activity_time = 0
 
                 elif speech_command == "":
                     pass
@@ -149,14 +153,22 @@ class DialogueController:
                     if not confirmed and confirmation != "":
                         self.robot_say_phrase("Oops, ok, let's try again.", self.talker_pub)
 
-            for word in ["socio bot", "social bot", "social", "bot", "hello social bot"]:
+            do_woke_up_command = False
+
+            for word in ["hello social bot", "socio bot", "social bot", "social", "bot"]:
                 if word in speech_command:
                     self.robot_say_phrase("Yes? What can I do for you?", self.talker_pub)
                     self.dialogue_mode = True
                     self.reset_last_activity_time()
+                    speech_command = speech_command.replace(word, "")
+                    if len(speech_command) > 0:
+                        do_woke_up_command = True
                     break
 
-            speech_command = ""
+            if do_woke_up_command:
+                pass
+            else:
+                speech_command = ""
 
             self.rate.sleep()
 
@@ -180,6 +192,8 @@ class DialogueController:
     # function. Note that this function controls microphone muting and unmuting. This is 
     # important so that the robot does not hear itself talking.
     def talk_function(self, data):
+        if "just say social bot to get my attention" not in data.data:
+            self.reset_last_activity_time()
         if not self.voice.is_talking():
             self.robot_is_talking = True
             rospy.loginfo("Robot is talking, so we shouldn't be listening.")
@@ -205,7 +219,8 @@ class DialogueController:
             self.robot_is_talking = False
             self.mic_listener.unmute_microphone()
             rospy.loginfo("Robot should be done talking, so we should listen again.")
-        self.reset_last_activity_time()
+        
+        
 
 
 
