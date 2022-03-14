@@ -1,6 +1,6 @@
 import rospy
 import requests
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 
 class TextMessageSender:
 
@@ -8,6 +8,7 @@ class TextMessageSender:
 
         self.speech_command_listener = rospy.Subscriber('speech_commands', String, self.speech_command_handler)
         self.robot_talk_publisher = rospy.Publisher('robot_talk', String, queue_size = 5)
+        self.task_done_publisher = rospy.Publisher('task/done', Bool)
         self.waiting_for_text_command = True
         self.ask_for_message = False
         self.waiting_for_message = False
@@ -56,6 +57,7 @@ class TextMessageSender:
                         rospy.loginfo("THIS IS WHERE WE SUBMIT THE MESSAGE TO THE API: " + self.text_message_content)
                         confirmed = True
                         self.send_text_message_to_server(self.text_message_content)
+                        self.task_done_publisher.publish(True)
                         break
                 if not confirmed:
                     self.robot_talk_publisher.publish(
@@ -88,10 +90,10 @@ class TextMessageSender:
 
 
     def send_text_message_to_server(self, message):
-        url = "https://adde8da4-f95d-4684-ba25-287f6c3f1c4e.mock.pstmn.io"
-        request_obj = {'text_message' : message}
+        url = "http://192.168.1.4:8000/api/text-message"
+        request_obj = {'text' : message, "type" : "message"}
         response = requests.post(url, data = request_obj)
-        return response        
+        return response       
 
 
 

@@ -5,6 +5,7 @@ from dialogue_package import MicrophoneListener as ml
 from dialogue_package import RobotVoice as rv
 from std_msgs.msg import String, Bool
 import time
+import requests
 from random import randrange
 
 class DialogueController:
@@ -38,10 +39,13 @@ class DialogueController:
         # in this module in order to keep things well synched.
         self.talker_sub = rospy.Subscriber('robot_talk', String, self.talk_function)
 
+        self.jam_pub = rospy.Publisher('jam', Bool, queue_size=1)
+
         # Listen to this topic for instructions to initiate dialogue with a guest. Mostly comes
         # from the find a guest module where the robot identifies and approaches a person to 
         # interact with them.
         self.task_start_sub = rospy.Subscriber('task/start', Bool, self.task_start_callback)
+        self.task_done_pub = rospy.Publisher('task/done', Bool, queue_size = 5)
 
 
         rospy.init_node('speech_text_broadcaster', anonymous=True)
@@ -91,7 +95,7 @@ class DialogueController:
 
             if not self.voice.is_talking() and not do_woke_up_command:
                 speech_command = mic_listener.listen().strip()
-                speech_command = speech_command.replace(" one ", " 1 ").replace(" two ", " 2 ").replace(" three ", " 3 ").replace(" four ", " 4 ")
+                speech_command = speech_command.replace("one", "1 ").replace("two", "2").replace("three", "3").replace(" four ", " 4 ")
                 speech_command = speech_command.replace(" five ", " 5 ").replace(" six ", " 6 ").replace(" seven ", " 7 ")
                 speech_command = speech_command.replace(" eight ", " 8 ").replace(" nine ", " 9 ")
                 rospy.loginfo(speech_command)
@@ -107,8 +111,21 @@ class DialogueController:
                     self.mic_listener.mute_microphone()
 
                 elif "joke" in speech_command:
-                    self.robot_say_phrase(self.robot_jokes[randrange(len(self.robot_jokes) - 1)] + " ha ha ha ha. ha.", self.talker_pub)
+                    self.robot_say_phrase(self.robot_jokes[randrange(len(self.robot_jokes) - 1)] + " ha ha ha ha. ha", self.talker_pub)
+                    rospy.sleep(5)
+                    self.jam_pub.publish(True)
                     self.mic_listener.mute_microphone()
+
+                elif "song" in speech_command or "music" in speech_command:
+                    self.robot_say_phrase("What song would you like to play?", self.talker_pub)
+                    rospy.loginfo("Waiting for song")
+                    song_name = mic_listener.listen().strip()
+                    if len(song_name) > 0:
+                        self.robot_say_phrase("Ok, I'll see if the DJ can spin up " + song_name, self.talker_pub)
+                        self.send_song_request_message_to_server(song_name)
+                        self.jam_pub.publish(True)
+                        self.task_done_pub.publish(True)
+                        
 
                 elif speech_command == "unrecognized input":
                     self.robot_say_phrase(
@@ -134,17 +151,18 @@ class DialogueController:
                     )
 
                 else:
-                    self.robot_say_phrase(
-                        ("I heard you say " + speech_command + ". Is that correct?"), 
-                        self.talker_pub
-                        )
+                    # self.robot_say_phrase(
+                    #     ("I heard you say " + speech_command + ". Is that correct?"), 
+                    #     self.talker_pub
+                    #     )
 
-                    rospy.loginfo("Waiting for confirmation")
-                    confirmation = mic_listener.listen().strip()
+                    # rospy.loginfo("Waiting for confirmation")
+                    # confirmation = mic_listener.listen().strip()
+                    confirmation = "yes"
                     confirmed = False
                     for word in ["yes", "yeah", "correct", "affirmative", "roger", "yup", "true"]:
                         if word in confirmation and confirmation != "":
-                            self.robot_say_phrase("Got it.", self.talker_pub)
+                            self.robot_say_phrase("I heard you say " + speech_command + " Got it." , self.talker_pub)
 
                             self.pub.publish(speech_command)
                             confirmed = True
@@ -239,6 +257,17 @@ class DialogueController:
                 "Hello, I'm social bot. I'm here to see if there's anything I can do for you." +
                 " If you'd like to hear your options, just say what can you do for me? or what are my options."
                 , self.talker_pub)
+
+
+
+    def send_song_request_message_to_server(self, message):
+        try:
+            url = "http://192.168.1.4:8000/api/text-message"
+            request_obj = {'text' : message, "type" : "song"}
+            response = requests.post(url, data = request_obj)
+            return response  
+        except:
+            pass
 
 
 if __name__ == '__main__':

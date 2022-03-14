@@ -17,9 +17,11 @@ class MicrophoneListener:
                 'take a picture', 'take picture', 'take a pic', 'take a pick',
                 'take pic', 'take pick', 'click a photograph', 'click photograph',
                 'take a photograph', 'take photograph', 'click a photo',
-                'click photo', 'take a photo', 'take photo'
+                'click photo', 'take a photo', 'take photo', "take me to table", "to table 1",
+                "to table 2", "to table 3", "take me", "take me to table 3", "take me to table 2", "take me to table 1",
+                "shutdown dialog controller"
         ]
-        self.default_energy_threshold = 1000
+        self.default_energy_threshold = 3000
         self.energy_threshold = self.default_energy_threshold
         self.use_dymanmic_energy_threshold = False
         self.recognizer.dynamic_energy_threshold = self.use_dymanmic_energy_threshold
